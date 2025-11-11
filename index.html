@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Statistik Sensor</title>
+    <style>
+        /* == PENGATURAN GLOBAL == */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0; /* Hapus margin default */
+            padding: 20px; /* Beri padding pada body */
+            background-color: #f4f7f6; 
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* == JUDUL UTAMA == */
+        h1 { 
+            color: #2c3e50; /* Warna biru-abu tua */
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* == LAYOUT CONTAINER (BARU) == */
+        /* Wrapper ini akan membuat card bisa responsif (grid) */
+        .container {
+            display: grid;
+            /* Buat kolom-kolom responsif: 
+               - Minimal lebar card 300px
+               - Akan mengisi ruang yang ada (1fr)
+               - 'auto-fit' akan membuat card turun ke baris baru jika tidak muat */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px; /* Jarak antar card */
+            max-width: 1200px; /* Batas lebar maksimum konten */
+            margin: 0 auto; /* Pusatkan container */
+        }
+
+        /* == DESAIN CARD == */
+        .card { 
+            background-color: #fff; 
+            border-radius: 10px; /* Sudut lebih bulat */
+            padding: 24px; /* Padding lebih besar */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08); /* Bayangan lebih halus */
+            /* Hapus margin-bottom, karena sudah diatur 'gap' di container */
+        }
+
+        /* == JUDUL DALAM CARD (H2) == */
+        h2 { 
+            border-bottom: 2px solid #ecf0f1; /* Garis bawah lebih soft */
+            padding-bottom: 10px; 
+            color: #34495e; /* Warna biru-abu */
+            margin-top: 0; /* Hapus margin atas default */
+            margin-bottom: 20px; /* Jarak ke konten di bawahnya */
+        }
+
+        /* == TEKS PARAGRAF DALAM CARD == */
+        .card p {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 12px;
+        }
+
+        /* == STYLING UNTUK NILAI DATA (PALING PENTING) == */
+        /* Ini akan memberi tampilan seperti 'tag' atau 'badge' pada angka */
+        #suhumax, #humidmax, #suhumin, #humidmin, #suhurata, #humidrata {
+            font-size: 1.15rem; /* Sedikit lebih besar */
+            font-weight: 700;
+            padding: 3px 8px; /* Beri padding internal */
+            border-radius: 5px; /* Sudut 'tag' */
+            margin-left: 8px; /* Jarak dari label (cth: "Suhu Maksimum:") */
+            display: inline-block; /* Agar padding bisa diterapkan */
+            min-width: 50px; /* Lebar minimum agar rata */
+            text-align: center;
+        }
+
+        /* Warna untuk MAKSIMUM (Merah) */
+        #suhumax, #humidmax { 
+            color: #c0392b; /* Merah tua */
+            background-color: #fbecec; /* Merah muda soft */
+        }
+        /* Warna untuk MINIMUM (Biru) */
+        #suhumin, #humidmin { 
+            color: #2980b9; /* Biru tua */
+            background-color: #ebf5fb; /* Biru muda soft */
+        }
+        /* Warna untuk RATA-RATA (Hijau) */
+        #suhurata, #humidrata { 
+            color: #27ae60; /* Hijau tua */
+            background-color: #eafaf1; /* Hijau muda soft */
+        }
+
+        /* == STYLING LIST BULAN & TAHUN == */
+        #month-year-list {
+            list-style-type: none; /* Hapus bullet points */
+            padding-left: 0;
+            margin-top: 15px;
+            max-height: 200px; /* Batas tinggi, akan scroll jika data banyak */
+            overflow-y: auto;
+        }
+        #month-year-list li {
+            background-color: #f9f9f9; /* Latar belakang tiap item */
+            border: 1px solid #eee;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Dashboard Statistik Sensor</h1>
+
+    <div class="container">
+
+        <div class="card">
+            <h2>Statistik Suhu</h2>
+            <p>Suhu Maksimum: <strong id="suhumax">...</strong> °C</p>
+            <p>Suhu Minimum: <strong id="suhumin">...</strong> °C</p>
+            <p>Suhu Rata-rata: <strong id="suhurata">...</strong> °C</p>
+        </div>
+
+        <div class="card">
+            <h2>Statistik Kelembapan</h2>
+            <p>Kelembapan Maksimum: <strong id="humidmax">...</strong> %</p>
+            <p>Kelembapan Minimum: <strong id="humidmin">...</strong> %</p>
+            <p>Kelembapan Rata-rata: <strong id="humidrata">...</strong> %</p>
+        </div>
+
+        <div class="card">
+            <h2>Bulan & Tahun Suhu Maksimum</h2>
+            <ul id="month-year-list">
+                <li>Memuat data...</li>
+            </ul>
+        </div>
+
+    </div> <script>
+        function ambilData() {
+            fetch("http://localhost:5000/api/statistik")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+
+                    // Isi statistik suhu
+                    document.getElementById("suhumax").innerText = data.suhumax;
+                    document.getElementById("suhumin").innerText = data.suhumin;
+                    document.getElementById("suhurata").innerText = data.suhurata;
+
+                    // Isi statistik humiditas
+                    document.getElementById("humidmax").innerText = data.humidmax;
+                    document.getElementById("humidmin").innerText = data.humidmin;
+                    document.getElementById("humidrata").innerText = data.humidrata;
+
+                    // Isi bulan & tahun suhu max
+                    const list = document.getElementById("month-year-list");
+                    let htmlList = "";
+
+                    // Pengecekan jika datanya ada atau tidak
+                    if (data.month_year_max && data.month_year_max.length > 0) {
+                        data.month_year_max.forEach(item => {
+                            htmlList += `<li>${item.month_year}</li>`;
+                        });
+                    } else {
+                        htmlList = "<li>Data tidak ditemukan.</li>";
+                    }
+
+                    list.innerHTML = htmlList;
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    // Tampilkan error di dalam container agar lebih rapi
+                    const container = document.querySelector(".container");
+                    if (container) {
+                        container.innerHTML = `<div class="card" style="grid-column: 1 / -1; text-align: center; color: red;">
+                                                <h2>Error</h2>
+                                                <p>Gagal memuat data dari server. Pastikan server (localhost:5000) berjalan.</p>
+                                               </div>`;
+                    } else {
+                        document.body.innerHTML = "Gagal memuat data dari server.";
+                    }
+                });
+        }
+
+        // update setiap 3 detik
+        setInterval(ambilData, 3000);
+        
+        // Panggil saat pertama kali load
+        ambilData();
+    </script>
+
+</body>
+</html>
